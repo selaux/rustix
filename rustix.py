@@ -7,7 +7,8 @@ import textwrap
 
 
 def derivation_name(name, version):
-    return "{}_{}".format(name.replace("-", "_"), version.replace('.', '_'))
+    return "{}_{}".format(name.replace("-", "__"), version.replace('.', '_'))
+
 
 def dedent(str):
     return textwrap.dedent(str).strip()
@@ -83,6 +84,7 @@ def metadata_key(package):
     source = package['source'].split('#')[0] if package['source'].startswith('git+') else package['source']
     return "checksum {} {} ({})".format(package['name'], package['version'], source)
 
+
 def dependency_derivation(package, metadata):
     sha256 = metadata[metadata_key(package)]
     if package['source'].startswith('git+'):
@@ -97,7 +99,7 @@ def render_nix_from_cargo_lock(lockfile, additional_checksums):
     dependeny_derivations = [dependency_derivation(package, metadata) for package in lockfile['package']]
     all_derivations_rendered = [d.render() for d in dependeny_derivations] + [ root.render() ]
 
-    return  dedent("""
+    return dedent("""
         {{ mkRustCrate, fetchurl, fetchgit }}:
         let
             release = true;
