@@ -1,23 +1,15 @@
-extern crate getopts;
 extern crate brotli;
 extern crate base64;
 
-use getopts::{Options};
 use std::env;
-use std::io;
 use std::io::Write;
 
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let opts = Options::new();
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => { m }
-        Err(f) => { panic!(f.to_string()) }
-    };
-    let input = if !matches.free.is_empty() {
-        matches.free[0].clone()
+    let input = if !args.is_empty() {
+        args[1].clone()
     } else {
         return;
     };

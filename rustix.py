@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import os.path as path
 import pytoml as toml
