@@ -25,7 +25,8 @@ def make_package_derivation(metadata, package):
         'sha256': metadata[build_metadata_key(package)], 
     }
     
-    return """{derivation_name} = mkRustCrate {{
+    return """
+    {derivation_name} = mkRustCrate {{
         crateName = "{name}";
         version = "{version}";
         {dependencies}
@@ -35,35 +36,36 @@ def make_package_derivation(metadata, package):
             name = "{name}-{version}.tar.gz";
         }};
         inherit release;
-    }};""".format(**derivation)
+    }};
+    """.format(**derivation)
 
 argparser = argparse.ArgumentParser(description='Build nix derivations from Cargo.lock')
-argparser.add_argument('lockfile', help='Path to Cargo.lock')
+argparser.add_argument('crate', help='Path to crate (where Cargo.toml and Cargo.lock are located')
 
 args = argparser.parse_args()
 
-with open(path.realpath(args.lockfile), 'rb') as lf:
+with open(path.realpath(path.join(args.crate, 'Cargo.lock')), 'rb') as lf:
     lockfile = toml.load(lf)
 
     root = lockfile['root']
     root['dependencies'] = ' '.join([ dependency_to_derivation_name(d) for d in root['dependencies'] ])
 
-    dep_derivations = '\n'.join([ make_package_derivation(lockfile['metadata'], package) for package in lockfile['package'] ])
+    dependencies_derivations = '\n'.join([ make_package_derivation(lockfile['metadata'], package) for package in lockfile['package'] ])
     top_level_derivation = """
-        {{ mkRustCrate, fetchurl }}:
-        let
-            release = true;
-            {other_derivations}
-        in
-        mkRustCrate {{
-            crateName = "{root[name]}";
-            version = "{root[version]}";
-            dependencies = [ {root[dependencies]} ];
-            src = ./.;
-            inherit release;
-        }}
+{{ mkRustCrate, fetchurl }}:
+let
+    release = true;
+    {dependencies_derivations}
+in
+mkRustCrate {{
+    crateName = "{root[name]}";
+    version = "{root[version]}";
+    dependencies = [ {root[dependencies]} ];
+    src = ./.;
+    inherit release;
+}}
     """.format(**{
-        'other_derivations': dep_derivations,
+        'dependencies_derivations': dependencies_derivations,
         'root': root
     })
     print(top_level_derivation)
