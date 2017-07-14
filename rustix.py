@@ -2,20 +2,24 @@ import argparse
 import os.path as path
 import pytoml as toml
 
+
 def nix_derivation_name(name, version):
     return "{}_{}".format(name.replace("-", "_"), version.replace('.', '_'))
+
 
 def build_metadata_key(package):
     return "checksum {} {} ({})".format(package['name'], package['version'], package['source'])
 
+
 def dependency_to_derivation_name(dependency):
-    [ name, version ]  = dependency.split(' ')[:2]
+    [name, version] = dependency.split(' ')[:2]
     return nix_derivation_name(name, version)
+
 
 def make_package_derivation(metadata, package):
     name = package['name']
     version = package['version']
-    dependencies = [ dependency_to_derivation_name(d) for d in package['dependencies'] ] if 'dependencies' in package else None
+    dependencies = [dependency_to_derivation_name(d) for d in package['dependencies']] if 'dependencies' in package else None
     dependencies_string = "dependencies = [ {} ];".format(' '.join(dependencies)) if dependencies else ""
     derivation = {
         'name': name,
@@ -48,9 +52,11 @@ with open(path.realpath(path.join(args.crate, 'Cargo.lock')), 'rb') as lf:
     lockfile = toml.load(lf)
 
     root = lockfile['root']
-    root['dependencies'] = ' '.join([ dependency_to_derivation_name(d) for d in root['dependencies'] ])
+    root['dependencies'] = ' '.join([dependency_to_derivation_name(d) for d in root['dependencies']])
 
-    dependencies_derivations = '\n'.join([ make_package_derivation(lockfile['metadata'], package) for package in lockfile['package'] ])
+    dependencies_derivations = '\n'.join([
+        make_package_derivation(lockfile['metadata'], package) for package in lockfile['package']
+    ])
     top_level_derivation = """
 {{ mkRustCrate, fetchurl }}:
 let
