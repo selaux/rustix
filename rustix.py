@@ -66,23 +66,39 @@ class VersionedCrateDerivation(CrateDerivation):
         """).format(name=self.name, version=self.version, sha256=self.sha256)
 
 
+class GitCrateDerivation(CrateDerivation):
+    def render_src(self):
+        [ url, rev ] = self.source.split('#')
+
+        return dedent("""
+            src = fetchgit {{
+                url = "{url}";
+                rev = "{rev}";
+                sha256 = "{sha256}";
+            }};
+        """).format(url=url[4:], rev=rev, sha256=self.sha256)
+
+
 def metadata_key(package):
-    return "checksum {} {} ({})".format(package['name'], package['version'], package['source'])
+    source = package['source'].split('#')[0] if package['source'].startswith('git+') else package['source']
+    return "checksum {} {} ({})".format(package['name'], package['version'], source)
 
 def dependency_derivation(package, metadata):
     sha256 = metadata[metadata_key(package)]
+    if package['source'].startswith('git+'):
+        return GitCrateDerivation({ **package ,'sha256': sha256})
     return VersionedCrateDerivation({ **package ,'sha256': sha256})
 
 
-def render_nix_from_cargo_lock(lockfile):
-    metadata = lockfile['metadata']
+def render_nix_from_cargo_lock(lockfile, additional_checksums):
+    metadata = {**lockfile['metadata'], **{"checksum " + name: val for name, val in additional_checksums.items()}}
 
     root = RootCrateDerivation(lockfile['root'])
     dependeny_derivations = [dependency_derivation(package, metadata) for package in lockfile['package']]
     all_derivations_rendered = [d.render() for d in dependeny_derivations] + [ root.render() ]
 
     return  dedent("""
-        {{ mkRustCrate, fetchurl }}:
+        {{ mkRustCrate, fetchurl, fetchgit }}:
         let
             release = true;
         {derivations}
@@ -96,11 +112,12 @@ def render_nix_from_cargo_lock(lockfile):
 
 argparser = argparse.ArgumentParser(description='Build nix derivations from Cargo.lock')
 argparser.add_argument('crate', help='Path to crate (where Cargo.toml and Cargo.lock are located')
+argparser.add_argument('--additional-checksum', nargs=2, action='append', help='Define additional checksums, e.g. for git repositories')
 
 args = argparser.parse_args()
 
 with open(path.realpath(path.join(args.crate, 'Cargo.lock')), 'rb') as lf:
     lockfile = toml.load(lf)
-    rendered = render_nix_from_cargo_lock(lockfile)
+    rendered = render_nix_from_cargo_lock(lockfile, dict(args.additional_checksum or []))
     print(rendered)
 

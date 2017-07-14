@@ -11,12 +11,13 @@ in
 with import nixpkgs {};
 cfg:
 let
+    additionalChecksums = builtins.foldl' (deps: dep: deps + "--additional-checksum '${dep.identifer}' '${dep.sha256}'") "" cfg.additionalChecksums;
     rustixDerivaton = stdenv.mkDerivation {
         name = "${cfg.name}-rustix";
         inherit (cfg) version src;
 
         buildPhase = ''
-            ${rustix}/bin/rustix.py $src > ./Cargo.lock.nix
+            ${rustix}/bin/rustix.py $src ${additionalChecksums} > ./Cargo.lock.nix
         '';
 
         installPhase = ''
@@ -26,4 +27,4 @@ let
         '';
     };
 in
-    import "${rustixDerivaton}/Cargo.lock.nix" { inherit mkRustCrate fetchurl; } rustc
+    import "${rustixDerivaton}/Cargo.lock.nix" { inherit mkRustCrate fetchurl fetchgit; } rustc

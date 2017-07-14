@@ -4,6 +4,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "brotli 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "getopts 0.2.14 (git+https://github.com/rust-lang-nursery/getopts.git)",
 ]
 
 [[package]]
@@ -43,6 +44,11 @@ version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "getopts"
+version = "0.2.14"
+source = "git+https://github.com/rust-lang-nursery/getopts.git#b8beaf635aae10e09a692eaaa21b814796b85e57"
+
+[[package]]
 name = "safemem"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -53,4 +59,5 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum brotli 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)" = "951f20a2cc403194b2746d9ac6f796292e3c0344e983c72c7d6bd6cff6c3d102"
 "checksum brotli-decompressor 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "39df8da5499507681bca2d22ffa76aca7e4116d89976815b850339b63b0abc50"
 "checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"
+"checksum getopts 0.2.14 (git+https://github.com/rust-lang-nursery/getopts.git)" = "<none>"
 "checksum safemem 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e27a8b19b835f7aea908818e871f5cc3a5a186550c30773be987e155e8163d8f"
